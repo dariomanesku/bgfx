@@ -271,6 +271,8 @@ namespace entry
 		SDL_USER_WINDOW_SET_TITLE,
 		SDL_USER_WINDOW_SET_POS,
 		SDL_USER_WINDOW_SET_SIZE,
+		SDL_USER_WINDOW_SET_MIN_SIZE,
+		SDL_USER_WINDOW_SET_MAX_SIZE,
 		SDL_USER_WINDOW_TOGGLE_FRAME,
 		SDL_USER_WINDOW_TOGGLE_FULL_SCREEN,
 		SDL_USER_WINDOW_MOUSE_LOCK,
@@ -828,6 +830,28 @@ namespace entry
 								}
 								break;
 
+							case SDL_USER_WINDOW_SET_MIN_SIZE:
+								{
+									WindowHandle handle = getWindowHandle(uev);
+									Msg* msg = (Msg*)uev.data2;
+									if (isValid(handle) )
+									{
+										SDL_SetWindowMinimumSize(m_window[handle.idx], msg->m_width, msg->m_height);
+									}
+								}
+								break;
+
+							case SDL_USER_WINDOW_SET_MAX_SIZE:
+								{
+									WindowHandle handle = getWindowHandle(uev);
+									Msg* msg = (Msg*)uev.data2;
+									if (isValid(handle) )
+									{
+										SDL_SetWindowMaximumSize(m_window[handle.idx], msg->m_width, msg->m_height);
+									}
+								}
+								break;
+
 							case SDL_USER_WINDOW_TOGGLE_FRAME:
 								{
 									WindowHandle handle = getWindowHandle(uev);
@@ -1013,6 +1037,22 @@ namespace entry
 		msg->m_height = _height;
 
 		sdlPostEvent(SDL_USER_WINDOW_SET_SIZE, _handle, msg);
+	}
+
+	void setWindowMinimumSize(WindowHandle _handle, uint32_t _minwidth, uint32_t _minheight)
+	{
+		Msg* msg = new Msg;
+		msg->m_width  = _minwidth;
+		msg->m_height = _minheight;
+		sdlPostEvent(SDL_USER_WINDOW_SET_MIN_SIZE, _handle, msg);
+	}
+
+	void setWindowMaximumSize(WindowHandle _handle, uint32_t _maxwidth, uint32_t _maxheight)
+	{
+		Msg* msg = new Msg;
+		msg->m_width  = _maxwidth;
+		msg->m_height = _maxheight;
+		sdlPostEvent(SDL_USER_WINDOW_SET_MAX_SIZE, _handle, msg);
 	}
 
 	void setWindowTitle(WindowHandle _handle, const char* _title)
