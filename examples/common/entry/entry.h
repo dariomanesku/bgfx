@@ -243,14 +243,11 @@ namespace entry
 	void setWindowPos(WindowHandle _handle, int32_t _x, int32_t _y);
 	void setWindowSize(WindowHandle _handle, uint32_t _width, uint32_t _height);
 	void setWindowTitle(WindowHandle _handle, const char* _title);
+	void setWindowMinimumSize(WindowHandle _handle, uint32_t _minWidth, uint32_t _minHeight);
+	void setWindowMaximumSize(WindowHandle _handle, uint32_t _maxWidth, uint32_t _maxHeight);
 	void toggleWindowFrame(WindowHandle _handle);
 	void toggleFullscreen(WindowHandle _handle);
 	void setMouseLock(WindowHandle _handle, bool _lock);
-
-#if ENTRY_CONFIG_USE_SDL
-	void setWindowMinimumSize(WindowHandle _handle, uint32_t _minwidth, uint32_t _minheight);
-	void setWindowMaximumSize(WindowHandle _handle, uint32_t _maxwidth, uint32_t _maxheight);
-#endif
 
 	struct WindowState
 	{

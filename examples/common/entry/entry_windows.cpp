@@ -1060,6 +1060,16 @@ namespace entry
 		PostMessage(s_ctx.m_hwnd[0], WM_USER_WINDOW_SET_TITLE, _handle.idx, (LPARAM)msg);
 	}
 
+	void setWindowMinimumSize(WindowHandle _handle, uint32_t _minWidth, uint32_t _minHeight)
+	{
+		BX_UNUSED(_handle, _minWidth, _minHeight);
+	}
+
+	void setWindowMaximumSize(WindowHandle _handle, uint32_t _maxWidth, uint32_t _maxHeight)
+	{
+		BX_UNUSED(_handle, _maxWidth, _maxHeight);
+	}
+
 	void toggleWindowFrame(WindowHandle _handle)
 	{
 		PostMessage(s_ctx.m_hwnd[0], WM_USER_WINDOW_TOGGLE_FRAME, _handle.idx, 0);

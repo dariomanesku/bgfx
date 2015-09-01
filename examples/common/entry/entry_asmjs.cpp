@@ -381,6 +381,16 @@ namespace entry
 		BX_UNUSED(_handle, _title);
 	}
 
+	void setWindowMinimumSize(WindowHandle _handle, uint32_t _minWidth, uint32_t _minHeight)
+	{
+		BX_UNUSED(_handle, _minWidth, _minHeight);
+	}
+
+	void setWindowMaximumSize(WindowHandle _handle, uint32_t _maxWidth, uint32_t _maxHeight)
+	{
+		BX_UNUSED(_handle, _maxWidth, _maxHeight);
+	}
+
 	void toggleWindowFrame(WindowHandle _handle)
 	{
 		BX_UNUSED(_handle);
@@ -395,6 +405,7 @@ namespace entry
 	{
 		BX_UNUSED(_handle, _lock);
 	}
+
 }
 
 int main(int _argc, char** _argv)

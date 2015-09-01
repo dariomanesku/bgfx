@@ -591,6 +591,16 @@ namespace entry
 		}
 	}
 
+	void setWindowMinimumSize(WindowHandle _handle, uint32_t _minWidth, uint32_t _minHeight)
+	{
+		BX_UNUSED(_handle, _minWidth, _minHeight);
+	}
+
+	void setWindowMaximumSize(WindowHandle _handle, uint32_t _maxWidth, uint32_t _maxHeight)
+	{
+		BX_UNUSED(_handle, _maxWidth, _maxHeight);
+	}
+
 	void toggleWindowFrame(WindowHandle _handle)
 	{
 		if (s_ctx.isValid(_handle) )
