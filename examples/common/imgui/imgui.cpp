@@ -2087,6 +2087,8 @@ struct Imgui
 		const bool over = _enabled && inRect(xx, yy, width, height, false);
 		const bool res = buttonLogic(id, over);
 
+		m_insideArea |= over;
+
 		drawRect( (float)xx
 				, (float)yy
 				, (float)width
