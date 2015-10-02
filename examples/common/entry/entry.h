@@ -232,7 +232,7 @@ namespace entry
 		int32_t m_axis[entry::GamepadAxis::Count];
 	};
 
-	bool processEvents(uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse = NULL, char* _outDropPath = NULL, uint32_t _dropPathSize = 0);
+	bool processEvents(uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse = NULL);
 
 	bx::FileReaderI* getFileReader();
 	bx::FileWriterI* getFileWriter();
