@@ -1654,11 +1654,12 @@ struct Imgui
 
 		if (screenQuad(xx, yy, _width, _height, _originBottomLeft) )
 		{
-			const bool enabled = _enabled && isEnabled(m_areaId);
-			const bool over = enabled && inRect(xx, yy, _width, _height);
+			const bool areaEnabled = isEnabled(m_areaId);
+			const bool over = areaEnabled && inRect(xx, yy, _width, _height);
 			const bool res = buttonLogic(id, over);
 
-			const float lodEnabled[4] = { _lod, float(enabled), 0.0f, 0.0f };
+			const float drawEnabled = float(_enabled && areaEnabled);
+			const float lodEnabled[4] = { _lod, drawEnabled, 0.0f, 0.0f };
 			bgfx::setUniform(u_imageLodEnabled, lodEnabled);
 			bgfx::setTexture(0, s_texColor, bgfx::isValid(_image) ? _image : m_missingTexture);
 			bgfx::setState(BGFX_STATE_RGB_WRITE
