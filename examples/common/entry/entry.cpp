@@ -425,7 +425,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 		return result;
 	}
 
-	bool processEvents(uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse)
+	bool processEvents(uint32_t& _width, uint32_t& _height, uint32_t& _debug, uint32_t& _reset, MouseState* _mouse, char* _outDropPath, uint32_t _dropPathSize)
 	{
 		s_debug = _debug;
 		s_reset = _reset;
@@ -519,6 +519,16 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 					break;
 
 				case Event::Window:
+					break;
+
+				case Event::Drop:
+					{
+						if (NULL != _outDropPath)
+						{
+							const DropEvent* drop = static_cast<const DropEvent*>(ev);
+							strncpy(_outDropPath, drop->m_path, _dropPathSize);
+						}
+					}
 					break;
 
 				case Event::Suspend:

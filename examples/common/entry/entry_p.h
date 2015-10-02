@@ -84,6 +84,7 @@ namespace entry
 			Mouse,
 			Size,
 			Window,
+			Drop,
 			Suspend,
 		};
 
@@ -162,6 +163,13 @@ namespace entry
 		ENTRY_IMPLEMENT_EVENT(WindowEvent, Event::Window);
 
 		void* m_nwh;
+	};
+
+	struct DropEvent : public Event
+	{
+		ENTRY_IMPLEMENT_EVENT(DropEvent, Event::Drop);
+
+		char m_path[4096];
 	};
 
 	struct SuspendEvent : public Event
@@ -262,6 +270,13 @@ namespace entry
 		{
 			WindowEvent* ev = new WindowEvent(_handle);
 			ev->m_nwh = _nwh;
+			m_queue.push(ev);
+		}
+
+		void postDropEvent(WindowHandle _handle, const char* _path)
+		{
+			DropEvent* ev = new DropEvent(_handle);
+			strncpy(ev->m_path, _path, sizeof(ev->m_path));
 			m_queue.push(ev);
 		}
 

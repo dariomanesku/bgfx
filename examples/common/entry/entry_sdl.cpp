@@ -479,6 +479,14 @@ namespace entry
 						exit = true;
 						break;
 
+					case SDL_DROPFILE:
+					    {
+							WindowHandle defaultWindow = { 0 };
+							m_eventQueue.postDropEvent(defaultWindow, event.drop.file);
+							SDL_free(event.drop.file);
+						}
+						break;
+
 					case SDL_MOUSEMOTION:
 						{
 							const SDL_MouseMotionEvent& mev = event.motion;
