@@ -840,8 +840,11 @@ struct Imgui
 		const int32_t mx = int32_t(float(_mx)*xscale);
 		const int32_t my = int32_t(float(_my)*yscale);
 
+        //TODO: figure this out!
 		IMGUI_beginFrame(mx, my, _button, _scroll, _width, _height, _inputChar, _view);
 		nvgBeginFrame(m_nvg, m_viewWidth, m_viewHeight, 1.0f);
+		//IMGUI_beginFrame(_mx, _my, _button, _scroll, _width, _height, _inputChar, _view);
+		//nvgBeginFrameScaled(m_nvg, m_viewWidth, m_viewHeight, m_surfaceWidth, m_surfaceHeight, 1.0f);
 		nvgViewId(m_nvg, _view);
 
 		bgfx::setViewName(_view, "IMGUI");
