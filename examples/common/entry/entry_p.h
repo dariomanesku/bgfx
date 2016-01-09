@@ -148,6 +148,7 @@ namespace entry
 		MouseButton::Enum m_button;
 		bool m_down;
 		bool m_move;
+		bool m_dclick;
 	};
 
 	struct SizeEvent : public Event
@@ -243,10 +244,11 @@ namespace entry
 			ev->m_button = MouseButton::None;
 			ev->m_down   = false;
 			ev->m_move   = true;
+			ev->m_dclick = false;
 			m_queue.push(ev);
 		}
 
-		void postMouseEvent(WindowHandle _handle, int32_t _mx, int32_t _my, int32_t _mz, MouseButton::Enum _button, bool _down)
+		void postMouseEvent(WindowHandle _handle, int32_t _mx, int32_t _my, int32_t _mz, MouseButton::Enum _button, bool _down, bool _dclick = false)
 		{
 			MouseEvent* ev = new MouseEvent(_handle);
 			ev->m_mx     = _mx;
@@ -255,6 +257,7 @@ namespace entry
 			ev->m_button = _button;
 			ev->m_down   = _down;
 			ev->m_move   = false;
+			ev->m_dclick = _dclick;
 			m_queue.push(ev);
 		}
 

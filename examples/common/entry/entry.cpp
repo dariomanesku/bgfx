@@ -437,6 +437,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 	{
 		s_debug = _debug;
 		s_reset = _reset;
+		_mouse->m_dclick = false;
 
 		WindowHandle handle = { UINT16_MAX };
 
@@ -502,6 +503,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 							else
 							{
 								_mouse->m_buttons[mouse->m_button] = mouse->m_down;
+								_mouse->m_dclick = mouse->m_dclick;
 							}
 						}
 					}
@@ -655,6 +657,7 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 							else
 							{
 								win.m_mouse.m_buttons[mouse->m_button] = mouse->m_down;
+								win.m_mouse.m_dclick = mouse->m_dclick;
 							}
 						}
 					}

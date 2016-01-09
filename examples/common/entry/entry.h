@@ -209,6 +209,7 @@ namespace entry
 			: m_mx(0)
 			, m_my(0)
 			, m_mz(0)
+			, m_dclick(false)
 		{
 			for (uint32_t ii = 0; ii < entry::MouseButton::Count; ++ii)
 			{
@@ -220,6 +221,7 @@ namespace entry
 		int32_t m_my;
 		int32_t m_mz;
 		uint8_t m_buttons[entry::MouseButton::Count];
+		bool m_dclick;
 	};
 
 	struct GamepadState

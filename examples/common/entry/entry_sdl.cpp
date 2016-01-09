@@ -27,6 +27,7 @@ BX_PRAGMA_DIAGNOSTIC_POP_CLANG()
 
 #include <stdio.h>
 #include <bx/thread.h>
+#include <bx/timer.h>
 #include <bx/handlealloc.h>
 #include <bx/readerwriter.h>
 #include <bx/crtimpl.h>
@@ -504,6 +505,25 @@ namespace entry
 					case SDL_MOUSEBUTTONDOWN:
 					case SDL_MOUSEBUTTONUP:
 						{
+							struct DoubleClick
+							{
+								enum LeftButtonState
+								{
+									Down,
+									Up,
+								};
+
+								DoubleClick()
+								{
+									m_tick = 0;
+									m_left = 0;
+								}
+
+								int64_t m_tick;
+								int32_t m_left;
+							};
+							static DoubleClick s_doubleClick;
+
 							const SDL_MouseButtonEvent& mev = event.button;
 							WindowHandle handle = findHandle(mev.windowID);
 							if (isValid(handle) )
@@ -517,12 +537,42 @@ namespace entry
 								case SDL_BUTTON_RIGHT:  button = MouseButton::Right;  break;
 								}
 
+								// Handle double click.
+								bool dclick = false;
+								if (button == MouseButton::Left)
+								{
+									switch (s_doubleClick.m_left)
+									{
+									case DoubleClick::Down:
+										{
+											if (SDL_MOUSEBUTTONDOWN == event.type)
+											{
+												const int64_t now = bx::getHPCounter();
+												const int64_t deltaTick = now - s_doubleClick.m_tick;
+												const double timePassedSec = (double(deltaTick)/double(bx::getHPFrequency()));
+												dclick = timePassedSec < 0.3;
+
+												s_doubleClick.m_tick = dclick ? 0 : now;
+												s_doubleClick.m_left = DoubleClick::Up;
+											}
+										} break;
+									case DoubleClick::Up:
+										{
+											if (SDL_MOUSEBUTTONUP == event.type)
+											{
+												s_doubleClick.m_left = DoubleClick::Down;
+											}
+										} break;
+									}
+								}
+
 								m_eventQueue.postMouseEvent(handle
 									, mev.x
 									, mev.y
 									, 0
 									, button
 									, mev.type == SDL_MOUSEBUTTONDOWN
+									, dclick
 									);
 							}
 						}
