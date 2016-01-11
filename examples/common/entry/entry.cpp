@@ -437,7 +437,11 @@ BX_PRAGMA_DIAGNOSTIC_POP();
 	{
 		s_debug = _debug;
 		s_reset = _reset;
-		_mouse->m_dclick = false;
+
+		if (_mouse)
+		{
+		    _mouse->m_dclick = false;
+		}
 
 		WindowHandle handle = { UINT16_MAX };
 
