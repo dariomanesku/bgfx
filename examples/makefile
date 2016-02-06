@@ -30,6 +30,7 @@ rebuild:
 #	@make -s --no-print-directory rebuild -C 25-c99
 #	@make -s --no-print-directory rebuild -C 26-occlusion
 	@make -s --no-print-directory rebuild -C 27-terrain
+	@make -s --no-print-directory rebuild -C xx-quad
 	@make -s --no-print-directory rebuild -C common/font
 	@make -s --no-print-directory rebuild -C common/imgui
 	@make -s --no-print-directory rebuild -C common/nanovg
