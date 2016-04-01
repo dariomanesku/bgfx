@@ -1460,6 +1460,11 @@ namespace bgfx { namespace gl
 				}
 			}
 
+			if (s_extension[Extension::ARB_clip_control].m_supported)
+			{
+				GL_CHECK(glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE));
+			}
+
 			// Allow all texture filters.
 			memset(s_textureFilter, true, BX_COUNTOF(s_textureFilter) );
 
