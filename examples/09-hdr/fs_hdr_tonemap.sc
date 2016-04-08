@@ -39,4 +39,6 @@ void main()
 	rgb += 0.6 * blur.xyz;
 
 	gl_FragColor = toGamma(vec4(rgb, 1.0) );
+
+	gl_FragColor = vec4_splat(texture2D(s_texColor, v_texcoord0).x);
 }

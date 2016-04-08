@@ -204,7 +204,7 @@ class ExampleHDR : public entry::AppI
 		m_mesh = meshLoad("meshes/bunny.bin");
 
 		m_fbtextures[0] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT|BGFX_TEXTURE_U_CLAMP|BGFX_TEXTURE_V_CLAMP);
-		m_fbtextures[1] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT_WRITE_ONLY);
+		m_fbtextures[1] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT);
 		m_fbh = bgfx::createFrameBuffer(BX_COUNTOF(m_fbtextures), m_fbtextures, true);
 
 		m_lum[0] = bgfx::createFrameBuffer(128, 128, bgfx::TextureFormat::BGRA8);
@@ -306,7 +306,7 @@ class ExampleHDR : public entry::AppI
 				bgfx::destroyFrameBuffer(m_fbh);
 
 				m_fbtextures[0] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::BGRA8, ( (msaa+1)<<BGFX_TEXTURE_RT_MSAA_SHIFT)|BGFX_TEXTURE_U_CLAMP|BGFX_TEXTURE_V_CLAMP);
-				m_fbtextures[1] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT_WRITE_ONLY|( (msaa+1)<<BGFX_TEXTURE_RT_MSAA_SHIFT) );
+				m_fbtextures[1] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT|( (msaa+1)<<BGFX_TEXTURE_RT_MSAA_SHIFT) );
 				m_fbh = bgfx::createFrameBuffer(BX_COUNTOF(m_fbtextures), m_fbtextures, true);
 			}
 
@@ -488,7 +488,7 @@ class ExampleHDR : public entry::AppI
 			bgfx::submit(8, m_blurProgram);
 
 			// m_blur m_bright pass horizontally, do tonemaping and combine.
-			bgfx::setTexture(0, s_texColor, m_fbtextures[0]);
+			bgfx::setTexture(0, s_texColor, m_fbtextures[1]);
 			bgfx::setTexture(1, s_texLum, m_lum[4]);
 			bgfx::setTexture(2, s_texBlur, m_blur);
 			bgfx::setState(BGFX_STATE_RGB_WRITE|BGFX_STATE_ALPHA_WRITE);
