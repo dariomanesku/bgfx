@@ -355,6 +355,14 @@ void inputSetMouseButtonState(entry::MouseButton::Enum _button, uint8_t _state)
 	s_input->m_mouse.setButtonState(_button, _state);
 }
 
+void inputGetMouseButtonState(uint8_t _mb[entry::MouseButton::Count])
+{
+	_mb[entry::MouseButton::None]   = s_input->m_mouse.m_buttons[entry::MouseButton::None];
+	_mb[entry::MouseButton::Left]   = s_input->m_mouse.m_buttons[entry::MouseButton::Left];
+	_mb[entry::MouseButton::Middle] = s_input->m_mouse.m_buttons[entry::MouseButton::Middle];
+	_mb[entry::MouseButton::Right]  = s_input->m_mouse.m_buttons[entry::MouseButton::Right];
+}
+
 void inputGetMouse(float _mouse[3])
 {
 	_mouse[0] = s_input->m_mouse.m_norm[0];
@@ -363,6 +371,13 @@ void inputGetMouse(float _mouse[3])
 	s_input->m_mouse.m_norm[0] = 0.0f;
 	s_input->m_mouse.m_norm[1] = 0.0f;
 	s_input->m_mouse.m_norm[2] = 0.0f;
+}
+
+void inputGetMouseAbsolute(int32_t _mouse[3])
+{
+	_mouse[0] = s_input->m_mouse.m_absolute[0];
+	_mouse[1] = s_input->m_mouse.m_absolute[1];
+	_mouse[2] = s_input->m_mouse.m_absolute[2];
 }
 
 bool inputIsMouseLocked()

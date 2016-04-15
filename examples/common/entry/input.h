@@ -64,10 +64,16 @@ void inputSetMousePos(int32_t _mx, int32_t _my, int32_t _mz);
 void inputSetMouseButtonState(entry::MouseButton::Enum _button, uint8_t _state);
 
 ///
+void inputGetMouseButtonState(uint8_t _mb[entry::MouseButton::Count]);
+
+///
 void inputSetMouseLock(bool _lock);
 
 ///
 void inputGetMouse(float _mouse[3]);
+
+///
+void inputGetMouseAbsolute(int32_t _mouse[3]);
 
 ///
 bool inputIsMouseLocked();
