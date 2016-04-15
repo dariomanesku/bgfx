@@ -368,9 +368,6 @@ void inputGetMouse(float _mouse[3])
 	_mouse[0] = s_input->m_mouse.m_norm[0];
 	_mouse[1] = s_input->m_mouse.m_norm[1];
 	_mouse[2] = s_input->m_mouse.m_norm[2];
-	s_input->m_mouse.m_norm[0] = 0.0f;
-	s_input->m_mouse.m_norm[1] = 0.0f;
-	s_input->m_mouse.m_norm[2] = 0.0f;
 }
 
 void inputGetMouseAbsolute(int32_t _mouse[3])
@@ -392,12 +389,6 @@ void inputSetMouseLock(bool _lock)
 		s_input->m_mouse.m_lock = _lock;
 		entry::WindowHandle defaultWindow = { 0 };
 		entry::setMouseLock(defaultWindow, _lock);
-		if (_lock)
-		{
-			s_input->m_mouse.m_norm[0] = 0.0f;
-			s_input->m_mouse.m_norm[1] = 0.0f;
-			s_input->m_mouse.m_norm[2] = 0.0f;
-		}
 	}
 }
 
