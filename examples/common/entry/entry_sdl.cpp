@@ -637,10 +637,8 @@ namespace entry
 									pressedChar[0] = 0x08;
 									m_eventQueue.postCharEvent(handle, 1, pressedChar);
 								}
-								else
-								{
-									m_eventQueue.postKeyEvent(handle, key, modifiers, kev.state == SDL_PRESSED);
-								}
+
+								m_eventQueue.postKeyEvent(handle, key, modifiers, kev.state == SDL_PRESSED);
 							}
 						}
 						break;
