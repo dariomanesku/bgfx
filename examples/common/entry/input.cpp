@@ -392,6 +392,12 @@ void inputSetMouseLock(bool _lock)
 	}
 }
 
+void inputSetMouseMotion(entry::MouseMotion::Enum _mm)
+{
+	entry::WindowHandle defaultWindow = { 0 };
+	entry::setMouseMotion(defaultWindow, _mm);
+}
+
 void inputSetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum _axis, int32_t _value)
 {
 	s_input->m_gamepad[_handle.idx].setAxis(_axis, _value);
@@ -400,4 +406,17 @@ void inputSetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum 
 int32_t inputGetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum _axis)
 {
 	return s_input->m_gamepad[_handle.idx].getAxis(_axis);
+}
+
+void systemSetWindowMousePos(int32_t _mx, int32_t _my)
+{
+	entry::WindowHandle defaultWindow = { 0 };
+	entry::setMousePos(defaultWindow, _mx, _my);
+}
+
+///
+void systemShowMouseCursor(bool _show)
+{
+	entry::WindowHandle defaultWindow = { 0 };
+	entry::showMouseCursor(defaultWindow, _show);
 }

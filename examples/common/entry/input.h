@@ -70,6 +70,9 @@ void inputGetMouseButtonState(uint8_t _mb[entry::MouseButton::Count]);
 void inputSetMouseLock(bool _lock);
 
 ///
+void inputSetMouseMotion(entry::MouseMotion::Enum _mm);
+
+///
 void inputGetMouse(float _mouse[3]);
 
 ///
@@ -83,5 +86,11 @@ void inputSetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum 
 
 ///
 int32_t inputGetGamepadAxis(entry::GamepadHandle _handle, entry::GamepadAxis::Enum _axis);
+
+///
+void systemSetWindowMousePos(int32_t _mx, int32_t _my);
+
+///
+void systemShowMouseCursor(bool _show);
 
 #endif // INPUT_H_HEADER_GUARD

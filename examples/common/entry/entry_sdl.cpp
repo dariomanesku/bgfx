@@ -22,6 +22,7 @@ BX_PRAGMA_DIAGNOSTIC_POP_CLANG()
 
 #include <bgfx/bgfxplatform.h>
 #if defined(None) // X11 defines this...
+#	define ENTRY_SDL_X11
 #	undef None
 #endif // defined(None)
 
@@ -277,6 +278,9 @@ namespace entry
 		SDL_USER_WINDOW_TOGGLE_FRAME,
 		SDL_USER_WINDOW_TOGGLE_FULL_SCREEN,
 		SDL_USER_WINDOW_MOUSE_LOCK,
+		SDL_USER_WINDOW_MOUSE_POS,
+		SDL_USER_SHOW_MOUSE_CURSOR,
+		SDL_USER_WINDOW_MOUSE_CONTROL,
 	};
 
 	static void sdlPostEvent(SDL_USER_WINDOW _type, WindowHandle _handle, Msg* _msg = NULL, uint32_t _code = 0)
@@ -313,6 +317,8 @@ namespace entry
 			, m_mouseLock(false)
 			, m_fullscreen(false)
 		{
+			m_mouseMotion = MouseMotion::Free;
+
 			memset(s_translateKey, 0, sizeof(s_translateKey) );
 			initTranslateKey(SDL_SCANCODE_ESCAPE,       Key::Esc);
 			initTranslateKey(SDL_SCANCODE_RETURN,       Key::Return);
@@ -470,6 +476,55 @@ namespace entry
 			while (!exit)
 			{
 				bgfx::renderFrame();
+
+				if (MouseMotion::Free != m_mouseMotion)
+				{
+					SDL_Window* window = m_window[0];
+
+					int winPos[2];
+					SDL_GetWindowPosition(window, &winPos[0], &winPos[1]);
+
+					int winSize[2];
+					SDL_GetWindowSize(window, &winSize[0], &winSize[1]);
+
+					int mousePos[2];
+					SDL_GetGlobalMouseState(&mousePos[0], &mousePos[1]);
+
+					#ifdef ENTRY_SDL_X11
+						enum { LeftBorderSize = 5 };
+						const int left  = winPos[0] + LeftBorderSize;
+						const int right = winPos[0] + winSize[0] + LeftBorderSize;
+
+						enum { TopBorderSize = 30 };
+						const int top    = winPos[1] + TopBorderSize;
+						const int bottom = winPos[1] + winSize[1] + TopBorderSize;
+					#else
+						const int left  = winPos[0];
+						const int right = winPos[0] + winSize[0];
+
+						const int top    = winPos[1];
+						const int bottom = winPos[1] + winSize[1];
+					#endif // ENTRY_SDL_X11
+
+					if (MouseMotion::WrapAround == m_mouseMotion)
+					{
+						if      (mousePos[0] < left)  { mousePos[0] = right; }
+						else if (mousePos[0] > right) { mousePos[0] = left;  }
+
+						if      (mousePos[1] < top)    { mousePos[1] = bottom; }
+						else if (mousePos[1] > bottom) { mousePos[1] = top;    }
+					}
+					else if (MouseMotion::LimitToWindow == m_mouseMotion)
+					{
+						if      (mousePos[0] < left)  { mousePos[0] = left;  }
+						else if (mousePos[0] > right) { mousePos[0] = right; }
+
+						if      (mousePos[1] < top)    { mousePos[1] = top;    }
+						else if (mousePos[1] > bottom) { mousePos[1] = bottom; }
+					}
+
+					SDL_WarpMouseGlobal(mousePos[0], mousePos[1]);
+				}
 
 				while (SDL_PollEvent(&event) )
 				{
@@ -933,6 +988,26 @@ namespace entry
 								}
 								break;
 
+							case SDL_USER_SHOW_MOUSE_CURSOR:
+								{
+									SDL_ShowCursor(uev.code);
+								}
+								break;
+
+							case SDL_USER_WINDOW_MOUSE_POS:
+								{
+									WindowHandle handle = getWindowHandle(uev);
+									Msg* msg = (Msg*)uev.data2;
+									SDL_WarpMouseInWindow(m_window[handle.idx], msg->m_x, msg->m_y);
+								}
+								break;
+
+							case SDL_USER_WINDOW_MOUSE_CONTROL:
+								{
+									m_mouseMotion = (MouseMotion::Enum)uev.code;
+								}
+								break;
+
 							default:
 								break;
 							}
@@ -1012,6 +1087,7 @@ namespace entry
 
 		bx::HandleAllocT<ENTRY_CONFIG_MAX_WINDOWS> m_windowAlloc;
 		SDL_Window* m_window[ENTRY_CONFIG_MAX_WINDOWS];
+		MouseMotion::Enum m_mouseMotion;
 		uint32_t m_flags[ENTRY_CONFIG_MAX_WINDOWS];
 
 		bx::HandleAllocT<ENTRY_CONFIG_MAX_GAMEPADS> m_gamepadAlloc;
@@ -1132,6 +1208,24 @@ namespace entry
 	void setMouseLock(WindowHandle _handle, bool _lock)
 	{
 		sdlPostEvent(SDL_USER_WINDOW_MOUSE_LOCK, _handle, NULL, _lock);
+	}
+
+	void setMousePos(WindowHandle _handle, int32_t _mx, int32_t _my)
+	{
+		Msg* msg = new Msg;
+		msg->m_x = _mx;
+		msg->m_y = _my;
+		sdlPostEvent(SDL_USER_WINDOW_MOUSE_POS, _handle, msg);
+	}
+
+	void showMouseCursor(WindowHandle _handle, bool _show)
+	{
+		sdlPostEvent(SDL_USER_SHOW_MOUSE_CURSOR, _handle, NULL, _show);
+	}
+
+	void setMouseMotion(WindowHandle _handle, MouseMotion::Enum _mm)
+	{
+		sdlPostEvent(SDL_USER_WINDOW_MOUSE_CONTROL, _handle, NULL, _mm);
 	}
 
 	int32_t MainThreadEntry::threadFunc(void* _userData)

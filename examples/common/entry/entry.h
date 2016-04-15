@@ -201,6 +201,16 @@ namespace entry
 		};
 	};
 
+	struct MouseMotion
+	{
+		enum Enum
+		{
+			Free,          //!> Mouse motion is not altered. It can go outside of window border.
+			WrapAround,    //!> Mouse wraps around window frame.
+			LimitToWindow, //!> Mouse motion is limited inside window frame.
+		};
+	};
+
 	const char* getName(Key::Enum _key);
 
 	struct MouseState
@@ -250,6 +260,9 @@ namespace entry
 	void toggleWindowFrame(WindowHandle _handle);
 	void toggleFullscreen(WindowHandle _handle);
 	void setMouseLock(WindowHandle _handle, bool _lock);
+	void setMousePos(WindowHandle _handle, int32_t _mx, int32_t _my);
+	void showMouseCursor(WindowHandle _handle, bool _show);
+	void setMouseMotion(WindowHandle _handle, MouseMotion::Enum _mm);
 
 	struct WindowState
 	{
