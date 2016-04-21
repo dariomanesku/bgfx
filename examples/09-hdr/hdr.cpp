@@ -193,18 +193,19 @@ class ExampleHDR : public entry::AppI
 		m_meshProgram    = loadProgram("vs_hdr_mesh",    "fs_hdr_mesh");
 		m_tonemapProgram = loadProgram("vs_hdr_tonemap", "fs_hdr_tonemap");
 
-		s_texCube   = bgfx::createUniform("s_texCube",  bgfx::UniformType::Int1);
-		s_texColor  = bgfx::createUniform("s_texColor", bgfx::UniformType::Int1);
-		s_texLum    = bgfx::createUniform("s_texLum",   bgfx::UniformType::Int1);
-		s_texBlur   = bgfx::createUniform("s_texBlur",  bgfx::UniformType::Int1);
-		u_mtx       = bgfx::createUniform("u_mtx",      bgfx::UniformType::Mat4);
-		u_tonemap   = bgfx::createUniform("u_tonemap",  bgfx::UniformType::Vec4);
-		u_offset    = bgfx::createUniform("u_offset",   bgfx::UniformType::Vec4, 16);
+		s_texCube    = bgfx::createUniform("s_texCube",    bgfx::UniformType::Int1);
+		s_texColor   = bgfx::createUniform("s_texColor",   bgfx::UniformType::Int1);
+		s_texColorMs = bgfx::createUniform("s_texColorMs", bgfx::UniformType::Int1);
+		s_texLum     = bgfx::createUniform("s_texLum",     bgfx::UniformType::Int1);
+		s_texBlur    = bgfx::createUniform("s_texBlur",    bgfx::UniformType::Int1);
+		u_mtx        = bgfx::createUniform("u_mtx",        bgfx::UniformType::Mat4);
+		u_tonemap    = bgfx::createUniform("u_tonemap",    bgfx::UniformType::Vec4);
+		u_offset     = bgfx::createUniform("u_offset",     bgfx::UniformType::Vec4, 16);
 
 		m_mesh = meshLoad("meshes/bunny.bin");
 
 		m_fbtextures[0] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::BGRA8, BGFX_TEXTURE_RT|BGFX_TEXTURE_U_CLAMP|BGFX_TEXTURE_V_CLAMP);
-		m_fbtextures[1] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT);
+		m_fbtextures[1] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::D32F, BGFX_TEXTURE_RT);
 		m_fbh = bgfx::createFrameBuffer(BX_COUNTOF(m_fbtextures), m_fbtextures, true);
 
 		m_lum[0] = bgfx::createFrameBuffer(128, 128, bgfx::TextureFormat::BGRA8);
@@ -276,6 +277,7 @@ class ExampleHDR : public entry::AppI
 
 		bgfx::destroyUniform(s_texCube);
 		bgfx::destroyUniform(s_texColor);
+		bgfx::destroyUniform(s_texColorMs);
 		bgfx::destroyUniform(s_texLum);
 		bgfx::destroyUniform(s_texBlur);
 		bgfx::destroyUniform(u_mtx);
@@ -305,8 +307,8 @@ class ExampleHDR : public entry::AppI
 
 				bgfx::destroyFrameBuffer(m_fbh);
 
-				m_fbtextures[0] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::BGRA8, ( (msaa+1)<<BGFX_TEXTURE_RT_MSAA_SHIFT)|BGFX_TEXTURE_U_CLAMP|BGFX_TEXTURE_V_CLAMP);
-				m_fbtextures[1] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::D16, BGFX_TEXTURE_RT|( (msaa+1)<<BGFX_TEXTURE_RT_MSAA_SHIFT) );
+				m_fbtextures[0] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::BGRA8, ( (msaa+1)<<BGFX_TEXTURE_RT_MSAA_SHIFT)|BGFX_TEXTURE_U_CLAMP|BGFX_TEXTURE_V_CLAMP|(msaa?BGFX_TEXTURE_MSAA_SAMPLE:0));
+				m_fbtextures[1] = bgfx::createTexture2D(m_width, m_height, 1, bgfx::TextureFormat::D32F,  ( (msaa+1)<<BGFX_TEXTURE_RT_MSAA_SHIFT)|(msaa?BGFX_TEXTURE_MSAA_SAMPLE:0) );
 				m_fbh = bgfx::createFrameBuffer(BX_COUNTOF(m_fbtextures), m_fbtextures, true);
 			}
 
@@ -488,7 +490,7 @@ class ExampleHDR : public entry::AppI
 			bgfx::submit(8, m_blurProgram);
 
 			// m_blur m_bright pass horizontally, do tonemaping and combine.
-			bgfx::setTexture(0, s_texColor, m_fbtextures[1]);
+			bgfx::setTexture(3, s_texColorMs, m_fbtextures[0]); // NOTE: m_fbtexture[0] works, m_fbtexture[1] doesn't!
 			bgfx::setTexture(1, s_texLum, m_lum[4]);
 			bgfx::setTexture(2, s_texBlur, m_blur);
 			bgfx::setState(BGFX_STATE_RGB_WRITE|BGFX_STATE_ALPHA_WRITE);
@@ -524,6 +526,7 @@ class ExampleHDR : public entry::AppI
 	bgfx::TextureHandle m_uffizi;
 	bgfx::UniformHandle s_texCube;
 	bgfx::UniformHandle s_texColor;
+	bgfx::UniformHandle s_texColorMs;
 	bgfx::UniformHandle s_texLum;
 	bgfx::UniformHandle s_texBlur;
 	bgfx::UniformHandle u_mtx;

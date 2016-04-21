@@ -10,6 +10,7 @@ $input v_texcoord0, v_texcoord1, v_texcoord2, v_texcoord3, v_texcoord4
 SAMPLER2D(s_texColor, 0);
 SAMPLER2D(s_texLum, 1);
 SAMPLER2D(s_texBlur, 2);
+SAMPLER2DMS(s_texColorMs, 3);
 
 void main()
 {
@@ -40,5 +41,5 @@ void main()
 
 	gl_FragColor = toGamma(vec4(rgb, 1.0) );
 
-	gl_FragColor = vec4_splat(texture2D(s_texColor, v_texcoord0).x);
+	gl_FragColor = vec4_splat(texelFetch(s_texColorMs, ivec2(gl_FragCoord.xy), 0).x);
 }
