@@ -6,6 +6,8 @@
 #ifndef BGFX_P_H_HEADER_GUARD
 #define BGFX_P_H_HEADER_GUARD
 
+#define BGFX_CONFIG_RENDERER_OPENGL 32
+
 #include <bx/platform.h>
 
 #ifndef BGFX_CONFIG_DEBUG
