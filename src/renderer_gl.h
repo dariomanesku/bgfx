@@ -1339,6 +1339,7 @@ namespace bgfx { namespace gl
 	{
 		ProgramGL()
 			: m_id(0)
+			, m_usedCount(0)
 			, m_constantBuffer(NULL)
 			, m_numPredefined(0)
 		{
@@ -1347,7 +1348,23 @@ namespace bgfx { namespace gl
 		void create(const ShaderGL& _vsh, const ShaderGL& _fsh);
 		void destroy();
 		void init();
-		void bindAttributes(const VertexDecl& _vertexDecl, uint32_t _baseVertex = 0) const;
+		void bindAttributesBegin()
+		{
+			memcpy(m_boundAttribs, m_used, sizeof(m_boundAttribs) );
+		}
+		void bindAttributes(const VertexDecl& _vertexDecl, uint32_t _baseVertex = 0);
+		void bindAttributesEnd()
+		{
+			for (uint32_t ii = 0, iiEnd = m_usedCount; ii < iiEnd; ++ii)
+			{
+				if (Attrib::Count != m_boundAttribs[ii])
+				{
+					Attrib::Enum attr = Attrib::Enum(m_boundAttribs[ii]);
+					GLint loc = m_attributes[attr];
+					GL_CHECK(glDisableVertexAttribArray(loc) );
+				}
+			}
+		}
 		void bindInstanceData(uint32_t _stride, uint32_t _baseVertex = 0) const;
 
 		void add(uint32_t _hash)
@@ -1357,7 +1374,9 @@ namespace bgfx { namespace gl
 
 		GLuint m_id;
 
-		uint8_t m_used[Attrib::Count+1]; // dense
+		uint8_t m_boundAttribs[Attrib::Count]; // For tracking bound attributes between begin()/end().
+		uint8_t m_used[Attrib::Count]; // dense
+		uint8_t m_usedCount;
 		GLint m_attributes[Attrib::Count]; // sparse
 		GLint m_instanceData[BGFX_CONFIG_MAX_INSTANCE_DATA_COUNT+1];
 

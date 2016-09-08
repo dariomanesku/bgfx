@@ -1229,9 +1229,16 @@ namespace bgfx
 			m_numIndirect   = UINT16_MAX;
 			m_num           = 1;
 			m_submitFlags   = BGFX_SUBMIT_EYE_FIRST;
+			m_vbIdx         = 0;
 			m_scissor       = UINT16_MAX;
-			m_vertexBuffer.idx       = invalidHandle;
-			m_vertexDecl.idx         = invalidHandle;
+			for (uint32_t ii = 0; ii < BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL; ++ii)
+			{
+				m_vertexBuffer[ii].idx = invalidHandle;
+			}
+			for (uint32_t ii = 0; ii < BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL; ++ii)
+			{
+				m_vertexDecl[ii].idx = invalidHandle;
+			}
 			m_indexBuffer.idx        = invalidHandle;
 			m_instanceDataBuffer.idx = invalidHandle;
 			m_indirectBuffer.idx     = invalidHandle;
@@ -1265,13 +1272,14 @@ namespace bgfx
 		uint16_t m_num;
 		uint16_t m_scissor;
 		uint8_t  m_submitFlags;
+		uint8_t  m_vbIdx;
 
-		VertexBufferHandle   m_vertexBuffer;
-		VertexDeclHandle     m_vertexDecl;
 		IndexBufferHandle    m_indexBuffer;
 		VertexBufferHandle   m_instanceDataBuffer;
 		IndirectBufferHandle m_indirectBuffer;
 		OcclusionQueryHandle m_occlusionQuery;
+		VertexBufferHandle   m_vertexBuffer[BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL];
+		VertexDeclHandle     m_vertexDecl[BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL];
 	};
 
 	struct RenderCompute
@@ -1549,25 +1557,28 @@ namespace bgfx
 
 		void setVertexBuffer(VertexBufferHandle _handle, uint32_t _startVertex, uint32_t _numVertices)
 		{
-			m_draw.m_startVertex  = _startVertex;
-			m_draw.m_numVertices  = _numVertices;
-			m_draw.m_vertexBuffer = _handle;
+			m_draw.m_startVertex = _startVertex;
+			m_draw.m_numVertices = _numVertices;
+			m_draw.m_vertexBuffer[m_draw.m_vbIdx] = _handle;
+			++m_draw.m_vbIdx;
 		}
 
 		void setVertexBuffer(const DynamicVertexBuffer& _dvb, uint32_t _startVertex, uint32_t _numVertices)
 		{
 			m_draw.m_startVertex  = _dvb.m_startVertex + _startVertex;
 			m_draw.m_numVertices  = bx::uint32_min(bx::uint32_imax(0, _dvb.m_numVertices - _startVertex), _numVertices);
-			m_draw.m_vertexBuffer = _dvb.m_handle;
-			m_draw.m_vertexDecl   = _dvb.m_decl;
+			m_draw.m_vertexBuffer[m_draw.m_vbIdx] = _dvb.m_handle;
+			m_draw.m_vertexDecl[m_draw.m_vbIdx]   = _dvb.m_decl;
+			++m_draw.m_vbIdx;
 		}
 
 		void setVertexBuffer(const TransientVertexBuffer* _tvb, uint32_t _startVertex, uint32_t _numVertices)
 		{
 			m_draw.m_startVertex  = _tvb->startVertex + _startVertex;
 			m_draw.m_numVertices  = bx::uint32_min(bx::uint32_imax(0, _tvb->size/_tvb->stride - _startVertex), _numVertices);
-			m_draw.m_vertexBuffer = _tvb->handle;
-			m_draw.m_vertexDecl   = _tvb->decl;
+			m_draw.m_vertexBuffer[m_draw.m_vbIdx] = _tvb->handle;
+			m_draw.m_vertexDecl[m_draw.m_vbIdx]   = _tvb->decl;
+			++m_draw.m_vbIdx;
 		}
 
 		void setInstanceDataBuffer(const InstanceDataBuffer* _idb, uint32_t _num)

@@ -3838,7 +3838,7 @@ namespace bgfx { namespace gl
 			{
 				BX_WARN(0 != _vsh.m_id, "Invalid vertex/compute shader.");
 				GL_CHECK(glDeleteProgram(m_id) );
-				m_used[0] = Attrib::Count;
+				m_usedCount = 0;
 				m_id = 0;
 				return;
 			}
@@ -4168,11 +4168,8 @@ namespace bgfx { namespace gl
 				m_used[used++] = ii;
 			}
 		}
-		BX_CHECK(used < BX_COUNTOF(m_used), "Out of bounds %d > array size %d."
-				, used
-				, BX_COUNTOF(m_used)
-				);
-		m_used[used] = Attrib::Count;
+		BX_CHECK(used <= Attrib::Count, "Out of bounds %d > Attrib::Count %d.", used, Attrib::Count);
+		m_usedCount = (uint8_t)used;
 
 		used = 0;
 		for (uint32_t ii = 0; ii < BX_COUNTOF(s_instanceDataName); ++ii)
@@ -4184,16 +4181,16 @@ namespace bgfx { namespace gl
 				m_instanceData[used++] = loc;
 			}
 		}
-		BX_CHECK(used < BX_COUNTOF(m_instanceData), "Out of bounds %d > array size %d."
+		BX_CHECK(used <= BX_COUNTOF(m_instanceData), "Out of bounds %d > array size %d."
 				, used
 				, BX_COUNTOF(m_instanceData)
 				);
 		m_instanceData[used] = 0xffff;
 	}
 
-	void ProgramGL::bindAttributes(const VertexDecl& _vertexDecl, uint32_t _baseVertex) const
+	void ProgramGL::bindAttributes(const VertexDecl& _vertexDecl, uint32_t _baseVertex)
 	{
-		for (uint32_t ii = 0; Attrib::Count != m_used[ii]; ++ii)
+		for (uint32_t ii = 0, iiEnd = m_usedCount; ii < iiEnd; ++ii)
 		{
 			Attrib::Enum attr = Attrib::Enum(m_used[ii]);
 			GLint loc = m_attributes[attr];
@@ -4233,10 +4230,8 @@ namespace bgfx { namespace gl
 								, (void*)(uintptr_t)baseVertex)
 								);
 					}
-				}
-				else
-				{
-					GL_CHECK(glDisableVertexAttribArray(loc) );
+
+					m_boundAttribs[ii] = Attrib::Count;
 				}
 			}
 		}
@@ -6783,34 +6778,40 @@ namespace bgfx { namespace gl
 					{
 						if (programChanged
 						||  baseVertex                        != draw.m_startVertex
-						||  currentState.m_vertexBuffer.idx   != draw.m_vertexBuffer.idx
+						||  currentState.m_vbIdx              != draw.m_vbIdx
 						||  currentState.m_indexBuffer.idx    != draw.m_indexBuffer.idx
 						||  currentState.m_instanceDataOffset != draw.m_instanceDataOffset
 						||  currentState.m_instanceDataStride != draw.m_instanceDataStride
-						||  currentState.m_instanceDataBuffer.idx != draw.m_instanceDataBuffer.idx)
+						||  currentState.m_instanceDataBuffer.idx != draw.m_instanceDataBuffer.idx
+						||  (0 != memcmp(currentState.m_vertexBuffer, draw.m_vertexBuffer
+										, BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL*sizeof(bgfx::VertexBufferHandle) ) )
+						)
 						{
 							bx::HashMurmur2A murmur;
 							murmur.begin();
-							murmur.add(draw.m_vertexBuffer.idx);
-
-							if (isValid(draw.m_vertexBuffer) )
-							{
-								const VertexBufferGL& vb = m_vertexBuffers[draw.m_vertexBuffer.idx];
-								uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl.idx : vb.m_decl.idx;
-								murmur.add(decl);
-							}
-
 							murmur.add(draw.m_indexBuffer.idx);
 							murmur.add(draw.m_instanceDataBuffer.idx);
 							murmur.add(draw.m_instanceDataOffset);
 							murmur.add(draw.m_instanceDataStride);
 							murmur.add(programIdx);
+							for (uint32_t ii = 0, end = draw.m_vbIdx; ii < end; ++ii)
+							{
+								murmur.add(draw.m_vertexBuffer[ii].idx);
+								if (isValid(draw.m_vertexBuffer[ii]) )
+								{
+									const VertexBufferGL& vb = m_vertexBuffers[draw.m_vertexBuffer[ii].idx];
+									uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl[ii].idx : vb.m_decl.idx;
+									murmur.add(decl);
+								}
+							}
 							uint32_t hash = murmur.end();
 
-							currentState.m_vertexBuffer = draw.m_vertexBuffer;
+							currentState.m_vbIdx = draw.m_vbIdx;
 							currentState.m_indexBuffer = draw.m_indexBuffer;
 							currentState.m_instanceDataOffset = draw.m_instanceDataOffset;
 							currentState.m_instanceDataStride = draw.m_instanceDataStride;
+							memcpy(currentState.m_vertexBuffer, draw.m_vertexBuffer
+										, BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL*sizeof(bgfx::VertexBufferHandle));
 							baseVertex = draw.m_startVertex;
 
 							GLuint id = m_vaoStateCache.find(hash);
@@ -6827,24 +6828,33 @@ namespace bgfx { namespace gl
 
 								program.add(hash);
 
-								if (isValid(draw.m_vertexBuffer) )
+								bool hasVb = false;
+								program.bindAttributesBegin();
+								for (uint8_t ii = 0, iiEnd = draw.m_vbIdx; ii < iiEnd; ++ii)
 								{
-									VertexBufferGL& vb = m_vertexBuffers[draw.m_vertexBuffer.idx];
-									vb.add(hash);
-									GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vb.m_id) );
-
-									uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl.idx : vb.m_decl.idx;
-									program.bindAttributes(m_vertexDecls[decl], draw.m_startVertex);
-
-									if (isValid(draw.m_instanceDataBuffer) )
+									if (isValid(draw.m_vertexBuffer[ii]) )
 									{
-										VertexBufferGL& instanceVb = m_vertexBuffers[draw.m_instanceDataBuffer.idx];
-										instanceVb.add(hash);
-										GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, instanceVb.m_id) );
-										program.bindInstanceData(draw.m_instanceDataStride, draw.m_instanceDataOffset);
+										hasVb = true;
+
+										VertexBufferGL& vb = m_vertexBuffers[draw.m_vertexBuffer[ii].idx];
+										vb.add(hash);
+										GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vb.m_id) );
+
+										uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl[ii].idx : vb.m_decl.idx;
+										program.bindAttributes(m_vertexDecls[decl], draw.m_startVertex);
+
+										if (isValid(draw.m_instanceDataBuffer) )
+										{
+											VertexBufferGL& instanceVb = m_vertexBuffers[draw.m_instanceDataBuffer.idx];
+											instanceVb.add(hash);
+											GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, instanceVb.m_id) );
+											program.bindInstanceData(draw.m_instanceDataStride, draw.m_instanceDataOffset);
+										}
 									}
 								}
-								else
+								program.bindAttributesEnd();
+
+								if (!hasVb)
 								{
 									GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0) );
 								}
@@ -6868,33 +6878,36 @@ namespace bgfx { namespace gl
 						&&  0 != currentVao)
 						{
 							GL_CHECK(glBindVertexArray(defaultVao) );
-							currentState.m_vertexBuffer.idx = invalidHandle;
 							currentState.m_indexBuffer.idx = invalidHandle;
+							for (uint32_t ii = 0; ii < BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL; ++ii)
+							{
+								currentState.m_vertexBuffer[ii].idx = invalidHandle;
+							}
 							bindAttribs = true;
 							currentVao = 0;
 						}
 
 						if (programChanged
-						||  currentState.m_vertexBuffer.idx != draw.m_vertexBuffer.idx
 						||  currentState.m_instanceDataBuffer.idx != draw.m_instanceDataBuffer.idx
 						||  currentState.m_instanceDataOffset != draw.m_instanceDataOffset
-						||  currentState.m_instanceDataStride != draw.m_instanceDataStride)
+						||  currentState.m_instanceDataStride != draw.m_instanceDataStride
+						||  (0 != memcmp(currentState.m_vertexBuffer, draw.m_vertexBuffer
+										, BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL*sizeof(bgfx::VertexBufferHandle) ) )
+						)
 						{
-							currentState.m_vertexBuffer = draw.m_vertexBuffer;
 							currentState.m_instanceDataBuffer.idx = draw.m_instanceDataBuffer.idx;
 							currentState.m_instanceDataOffset = draw.m_instanceDataOffset;
 							currentState.m_instanceDataStride = draw.m_instanceDataStride;
+							memcpy(currentState.m_vertexBuffer, draw.m_vertexBuffer
+										, BGFX_CONFIG_MAX_VERTEX_BUFFERS_PER_DRAW_CALL*sizeof(bgfx::VertexBufferHandle));
 
-							uint16_t handle = draw.m_vertexBuffer.idx;
-							if (invalidHandle != handle)
+							for (uint8_t ii = 0, end = draw.m_vbIdx; ii < end; ++ii)
 							{
-								VertexBufferGL& vb = m_vertexBuffers[handle];
-								GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vb.m_id) );
-								bindAttribs = true;
-							}
-							else
-							{
-								GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0) );
+								if (isValid(currentState.m_vertexBuffer[ii]) )
+								{
+									bindAttribs = true;
+									break;
+								}
 							}
 						}
 
@@ -6914,32 +6927,57 @@ namespace bgfx { namespace gl
 							}
 						}
 
-						if (isValid(currentState.m_vertexBuffer) )
+						if (baseVertex != draw.m_startVertex
+						||  bindAttribs)
 						{
-							if (baseVertex != draw.m_startVertex
-							||  bindAttribs)
+							bool hasVb = false;
+							program.bindAttributesBegin();
+							for (uint8_t ii = 0, end = draw.m_vbIdx; ii < end; ++ii)
 							{
-								baseVertex = draw.m_startVertex;
-								const VertexBufferGL& vb = m_vertexBuffers[draw.m_vertexBuffer.idx];
-								uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl.idx : vb.m_decl.idx;
-								program.bindAttributes(m_vertexDecls[decl], draw.m_startVertex);
-
-								if (isValid(draw.m_instanceDataBuffer) )
+								if (isValid(currentState.m_vertexBuffer[ii]) )
 								{
-									GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffers[draw.m_instanceDataBuffer.idx].m_id) );
-									program.bindInstanceData(draw.m_instanceDataStride, draw.m_instanceDataOffset);
+									hasVb = true;
+
+									baseVertex = draw.m_startVertex;
+									const VertexBufferGL& vb = m_vertexBuffers[draw.m_vertexBuffer[ii].idx];
+									GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vb.m_id) );
+
+									uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl[ii].idx : vb.m_decl.idx;
+									program.bindAttributes(m_vertexDecls[decl], draw.m_startVertex);
+
+									if (isValid(draw.m_instanceDataBuffer) )
+									{
+										GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffers[draw.m_instanceDataBuffer.idx].m_id) );
+										program.bindInstanceData(draw.m_instanceDataStride, draw.m_instanceDataOffset);
+									}
 								}
+							}
+							program.bindAttributesEnd();
+
+							if (!hasVb)
+							{
+								GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0) );
 							}
 						}
 					}
 
-					if (isValid(currentState.m_vertexBuffer) )
+					uint8_t validVb = UINT8_MAX;
+					for (uint8_t ii = 0, end = draw.m_vbIdx; ii < end; ++ii)
+					{
+						if (isValid(currentState.m_vertexBuffer[ii]) )
+						{
+							validVb = ii;
+							break;
+						}
+					}
+
+					if (UINT8_MAX != validVb)
 					{
 						uint32_t numVertices = draw.m_numVertices;
 						if (UINT32_MAX == numVertices)
 						{
-							const VertexBufferGL& vb = m_vertexBuffers[currentState.m_vertexBuffer.idx];
-							uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl.idx : vb.m_decl.idx;
+							const VertexBufferGL& vb = m_vertexBuffers[currentState.m_vertexBuffer[validVb].idx];
+							uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl[validVb].idx : vb.m_decl.idx;
 							const VertexDecl& vertexDecl = m_vertexDecls[decl];
 							numVertices = vb.m_size/vertexDecl.m_stride;
 						}

@@ -4020,22 +4020,22 @@ namespace bgfx { namespace d3d9
 				}
 
 				if (programChanged
-				||  currentState.m_vertexBuffer.idx != draw.m_vertexBuffer.idx
+				||  currentState.m_vertexBuffer[0].idx != draw.m_vertexBuffer[0].idx
 				||  currentState.m_instanceDataBuffer.idx != draw.m_instanceDataBuffer.idx
 				||  currentState.m_instanceDataOffset != draw.m_instanceDataOffset
 				||  currentState.m_instanceDataStride != draw.m_instanceDataStride)
 				{
-					currentState.m_vertexBuffer = draw.m_vertexBuffer;
+					currentState.m_vertexBuffer[0] = draw.m_vertexBuffer[0];
 					currentState.m_instanceDataBuffer.idx = draw.m_instanceDataBuffer.idx;
 					currentState.m_instanceDataOffset = draw.m_instanceDataOffset;
 					currentState.m_instanceDataStride = draw.m_instanceDataStride;
 
-					uint16_t handle = draw.m_vertexBuffer.idx;
+					uint16_t handle = draw.m_vertexBuffer[0].idx;
 					if (invalidHandle != handle)
 					{
 						const VertexBufferD3D9& vb = m_vertexBuffers[handle];
 
-						uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl.idx : vb.m_decl.idx;
+						uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl[0].idx : vb.m_decl.idx;
 						const VertexDeclD3D9& vertexDecl = m_vertexDecls[decl];
 						DX_CHECK(device->SetStreamSource(0, vb.m_ptr, 0, vertexDecl.m_decl.m_stride) );
 
@@ -4081,13 +4081,13 @@ namespace bgfx { namespace d3d9
 					}
 				}
 
-				if (isValid(currentState.m_vertexBuffer) )
+				if (isValid(currentState.m_vertexBuffer[0]) )
 				{
 					uint32_t numVertices = draw.m_numVertices;
 					if (UINT32_MAX == numVertices)
 					{
-						const VertexBufferD3D9& vb = m_vertexBuffers[currentState.m_vertexBuffer.idx];
-						uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl.idx : vb.m_decl.idx;
+						const VertexBufferD3D9& vb = m_vertexBuffers[currentState.m_vertexBuffer[0].idx];
+						uint16_t decl = !isValid(vb.m_decl) ? draw.m_vertexDecl[0].idx : vb.m_decl.idx;
 						const VertexDeclD3D9& vertexDecl = m_vertexDecls[decl];
 						numVertices = vb.m_size/vertexDecl.m_decl.m_stride;
 					}
